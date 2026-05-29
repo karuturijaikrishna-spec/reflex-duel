@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reflex Duel</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    #game {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #888;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #score-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .score-card {
+      flex: 1;
+      background: #1a1a1a;
+      border: 0.5px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .score-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 4px;
+    }
+
+    .score-num {
+      font-size: 24px;
+      font-weight: 600;
+      color: #e8e8e8;
+    }
+
+    #arena {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .fighter {
+      flex: 1;
+      border: 0.5px solid #2a2a2a;
+      border-radius: 12px;
+      background: #1a1a1a;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .fighter.flash-win { background: #0d2e14; border-color: #2a6e3a; }
+    .fighter.flash-lose { background: #2e0d0d; border-color: #6e2a2a; }
+
+    .fighter-label {
+      font-size: 11px;
+      color: #666;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .fighter-time {
+      font-size: 34px;
+      font-weight: 600;
+      color: #e8e8e8;
+      line-height: 1;
+    }
+
+    .fighter-time small {
+      font-size: 13px;
+      font-weight: 400;
+      color: #888;
+    }
+
+    .fighter-record {
+      font-size: 12px;
+      color: #555;
+      margin-top: 6px;
+    }
+
+    #signal-zone {
+      border-radius: 12px;
+      border: 0.5px solid #2a2a2a;
+      background: #1a1a1a;
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 14px;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.1s, border-color 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #signal-zone.ready { background: #2e1a1a; border-color: #7a3333; }
+    #signal-zone.go { background: #0d2e14; border-color: #2a6e3a; }
+
+    #signal-icon { font-size: 32px; color: #888; }
+    #signal-zone.ready #signal-icon { color: #e05555; }
+    #signal-zone.go #signal-icon { color: #4ecb71; }
+
+    #signal-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #e8e8e8;
+    }
+
+    #signal-sub {
+      font-size: 13px;
+      color: #666;
+    }
+
+    #taunt {
+      background: #1a1a1a;
+      border: 0.5px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #888;
+      text-align: center;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+
+    #start-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      background: #e8e8e8;
+      color: #0f0f0f;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    #start-btn:hover { opacity: 0.9; }
+    #start-btn:active { transform: scale(0.98); }
+    #start-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+  </style>
+</head>
+<body>
+<div id="game">
+  <h1>⚡ Reflex Duel</h1>
+  <p class="subtitle">You vs CPU — tap when it turns green</p>
+
+  <div id="score-bar">
+    <div class="score-card"><div class="score-label">You</div><div class="score-num" id="user-wins">0</div></div>
+    <div class="score-card"><div class="score-label">Rounds</div><div class="score-num" id="rounds">0</div></div>
+    <div class="score-card"><div class="score-label">CPU</div><div class="score-num" id="cpu-wins">0</div></div>
+  </div>
+
+  <div id="arena">
+    <div class="fighter" id="user-fighter">
+      <div class="fighter-label">You</div>
+      <div class="fighter-time" id="user-time">—</div>
+      <div class="fighter-record" id="user-best">best: —</div>
+    </div>
+    <div class="fighter" id="cpu-fighter">
+      <div class="fighter-label">CPU</div>
+      <div class="fighter-time" id="cpu-time">—</div>
+      <div class="fighter-record" id="cpu-record">difficulty: normal</div>
+    </div>
+  </div>
+
+  <div id="signal-zone" onclick="handleTap()">
+    <div id="signal-icon"><i class="ti ti-bolt"></i></div>
+    <div id="signal-text">Tap to start a round</div>
+    <div id="signal-sub">Wait for green, then tap fast</div>
+  </div>
+
+  <div id="taunt">"CPU is warming up its circuits..."</div>
+  <button id="start-btn" onclick="startRound()">Start round</button>
+</div>
+
+<script>
+  const state = {
+    phase: 'idle',
+    startTime: 0,
+    goTimer: null,
+    userWins: 0, cpuWins: 0, rounds: 0,
+    userBest: Infinity,
+    cpuDifficulty: 220,
+    cpuTimes: []
+  };
+
+  const taunts = {
+    early: ["false start! are you sweating?", "too eager. embarrassing.", "my grandma has better impulse control."],
+    cpuWin: ["i was born for this.", "did you blink?", "not even close. try again.", "i sneezed and still beat you.", "you call that a reflex?"],
+    userWin: ["lucky. do it again.", "i was lagging. doesn't count.", "enjoy it. it won't happen twice.", "fine. round two.", "my cooling fan hiccuped."],
+    close: ["that was close. almost respectable.", "okay you're not completely hopeless.", "i felt that one. almost."],
+    win3: ["i'm genuinely bored.", "call me when you level up.", "want me to spot you some milliseconds?"],
+    lose3: ["okay okay you're decent.", "i need to recalibrate.", "this isn't over."]
+  };
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function setTaunt(t) { document.getElementById('taunt').textContent = '"' + t + '"'; }
+
+  function updateScores() {
+    document.getElementById('user-wins').textContent = state.userWins;
+    document.getElementById('cpu-wins').textContent = state.cpuWins;
+    document.getElementById('rounds').textContent = state.rounds;
+  }
+
+  function setSignal(mode, icon, text, sub) {
+    const z = document.getElementById('signal-zone');
+    z.className = mode || '';
+    document.getElementById('signal-icon').innerHTML = '<i class="ti ti-' + icon + '"></i>';
+    document.getElementById('signal-text').textContent = text;
+    document.getElementById('signal-sub').textContent = sub || '';
+  }
+
+  function startRound() {
+    if (state.phase !== 'idle') return;
+    state.phase = 'waiting';
+    document.getElementById('start-btn').disabled = true;
+    document.getElementById('user-fighter').className = 'fighter';
+    document.getElementById('cpu-fighter').className = 'fighter';
+    document.getElementById('user-time').textContent = '—';
+    document.getElementById('cpu-time').textContent = '—';
+    setSignal('ready', 'hourglass', 'Get ready...', 'Do NOT tap yet');
+    const delay = 1500 + Math.random() * 2500;
+    state.goTimer = setTimeout(go, delay);
+  }
+
+  function go() {
+    state.phase = 'go';
+    state.startTime = performance.now();
+    setSignal('go', 'player-play', 'TAP NOW!', '');
+    const cpuTime = state.cpuDifficulty + (Math.random() * 80 - 40);
+    const rounded = Math.round(cpuTime);
+    state.cpuTimes.push(rounded);
+    setTimeout(() => {
+      if (state.phase === 'go') resolveRound(null, rounded);
+    }, rounded);
+  }
+
+  function handleTap() {
+    if (state.phase === 'waiting') {
+      clearTimeout(state.goTimer);
+      state.phase = 'idle';
+      setSignal('', 'x', 'False start!', 'You tapped too early');
+      setTaunt(pick(taunts.early));
+      document.getElementById('user-fighter').className = 'fighter flash-lose';
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('start-btn').textContent = 'Try again';
+      return;
+    }
+    if (state.phase === 'go') {
+      const userTime = Math.round(performance.now() - state.startTime);
+      resolveRound(userTime, null);
+    }
+  }
+
+  function resolveRound(userTime, cpuTimePassed) {
+    if (state.phase !== 'go') return;
+    state.phase = 'result';
+    state.rounds++;
+    const cpuTime = cpuTimePassed !== null ? cpuTimePassed : state.cpuTimes[state.cpuTimes.length - 1];
+    const uEl = document.getElementById('user-fighter');
+    const cEl = document.getElementById('cpu-fighter');
+
+    document.getElementById('cpu-time').innerHTML = cpuTime + '<small>ms</small>';
+
+    if (userTime === null) {
+      document.getElementById('user-time').textContent = '—';
+      uEl.className = 'fighter flash-lose';
+      cEl.className = 'fighter flash-win';
+      state.cpuWins++;
+      setTaunt(pick(state.cpuWins >= 3 && state.cpuWins > state.userWins * 1.5 ? taunts.win3 : taunts.cpuWin));
+      setSignal('', 'robot', 'CPU wins!', cpuTime + 'ms — you didn\'t tap in time');
+    } else {
+      document.getElementById('user-time').innerHTML = userTime + '<small>ms</small>';
+      if (userTime < cpuTime) {
+        uEl.className = 'fighter flash-win';
+        cEl.className = 'fighter flash-lose';
+        state.userWins++;
+        const diff = cpuTime - userTime;
+        setTaunt(pick(diff < 30 ? taunts.close : (state.userWins >= 3 && state.userWins > state.cpuWins * 1.5 ? taunts.lose3 : taunts.userWin)));
+        setSignal('', 'trophy', 'You win!', 'By ' + diff + 'ms');
+        if (userTime < state.userBest) {
+          state.userBest = userTime;
+          document.getElementById('user-best').textContent = 'best: ' + userTime + 'ms';
+        }
+      } else {
+        uEl.className = 'fighter flash-lose';
+        cEl.className = 'fighter flash-win';
+        state.cpuWins++;
+        const diff = userTime - cpuTime;
+        setTaunt(pick(diff < 30 ? taunts.close : (state.cpuWins >= 3 && state.cpuWins > state.userWins * 1.5 ? taunts.win3 : taunts.cpuWin)));
+        setSignal('', 'robot', 'CPU wins!', 'By ' + diff + 'ms');
+      }
+    }
+
+    updateScores();
+    state.phase = 'idle';
+    const btn = document.getElementById('start-btn');
+    btn.disabled = false;
+    btn.textContent = 'Next round';
+
+    if (state.rounds % 5 === 0 && state.userWins > state.cpuWins) {
+      state.cpuDifficulty = Math.max(140, state.cpuDifficulty - 15);
+      document.getElementById('cpu-record').textContent = 'difficulty: ↑ harder';
+    }
+  }
+</script>
+</body>
+</html>
